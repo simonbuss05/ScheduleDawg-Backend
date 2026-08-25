@@ -1,6 +1,7 @@
 package com.simon.scheduledawg.entity;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
@@ -19,6 +20,7 @@ public class Event {
 
     @ManyToOne
     @JoinColumn(name = "meeting_id")
+    @JsonIgnore
     private Meeting meeting;
 
     private LocalDate eventDate;

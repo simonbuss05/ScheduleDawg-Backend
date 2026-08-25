@@ -1,9 +1,12 @@
+// src/main/java/com/simon/scheduledawg/entity/Meeting.java
 package com.simon.scheduledawg.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.time.LocalTime;
-
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "meetings")
@@ -22,15 +25,19 @@ public class Meeting {
 
     @ManyToOne
     @JoinColumn(name = "course_id")
+    @JsonIgnore
     private Course course;
 
     private String location;
+
+    @OneToMany(mappedBy = "meeting", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Event> events = new ArrayList<>();
 
     public Meeting() {
 
     }
 
-    public Meeting(Day dayOfWeek, LocalTime startTime, LocalTime endTime, String location,  Course course) {
+    public Meeting(Day dayOfWeek, LocalTime startTime, LocalTime endTime, String location, Course course) {
         this.dayOfWeek = dayOfWeek;
         this.startTime = startTime;
         this.endTime = endTime;
@@ -68,12 +75,16 @@ public class Meeting {
     public void setLocation(String location) {
         this.location = location;
     }
-
     public Course getCourse() {
         return course;
     }
     public void setCourse(Course course) {
         this.course = course;
     }
-
+    public List<Event> getEvents() {
+        return events;
+    }
+    public void setEvents(List<Event> events) {
+        this.events = events;
+    }
 }
