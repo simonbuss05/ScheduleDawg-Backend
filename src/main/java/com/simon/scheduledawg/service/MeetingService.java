@@ -50,7 +50,8 @@ public class MeetingService {
         meetingToUpdate.setDayOfWeek(meeting.getDayOfWeek());
         meetingToUpdate.setStartTime(meeting.getStartTime());
         meetingToUpdate.setEndTime(meeting.getEndTime());
-        meetingToUpdate.setLocation(meeting.getLocation());
+        meetingToUpdate.setRoomNumber(meeting.getRoomNumber());
+        meetingToUpdate.setBuilding(meeting.getBuilding());
         return meetingRepository.save(meetingToUpdate);
     }
 
@@ -65,8 +66,11 @@ public class MeetingService {
         if (meeting.getEndTime() != null) {
             meetingToUpdate.setEndTime(meeting.getEndTime());
         }
-        if (meeting.getLocation() != null) {
-            meetingToUpdate.setLocation(meeting.getLocation());
+        if (meeting.getBuilding() != null) {
+            meetingToUpdate.setBuilding(meeting.getBuilding());
+        }
+        if (meeting.getRoomNumber() != null) {
+            meetingToUpdate.setRoomNumber(meeting.getRoomNumber());
         }
         return meetingRepository.save(meetingToUpdate);
     }

@@ -28,7 +28,9 @@ public class Meeting {
     @JsonIgnore
     private Course course;
 
-    private String location;
+    private String building;
+
+    private String roomNumber;
 
     @OneToMany(mappedBy = "meeting", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Event> events = new ArrayList<>();
@@ -37,12 +39,13 @@ public class Meeting {
 
     }
 
-    public Meeting(Day dayOfWeek, LocalTime startTime, LocalTime endTime, String location, Course course) {
+    public Meeting(Day dayOfWeek, LocalTime startTime, LocalTime endTime, Course course, String building, String roomNumber) {
         this.dayOfWeek = dayOfWeek;
         this.startTime = startTime;
         this.endTime = endTime;
-        this.location = location;
         this.course = course;
+        this.building = building;
+        this.roomNumber = roomNumber;
     }
 
     public Long getId() {
@@ -69,12 +72,6 @@ public class Meeting {
     public void setEndTime(LocalTime endTime) {
         this.endTime = endTime;
     }
-    public String getLocation() {
-        return location;
-    }
-    public void setLocation(String location) {
-        this.location = location;
-    }
     public Course getCourse() {
         return course;
     }
@@ -86,5 +83,17 @@ public class Meeting {
     }
     public void setEvents(List<Event> events) {
         this.events = events;
+    }
+    public String getBuilding() {
+        return building;
+    }
+    public void setBuilding(String building) {
+        this.building = building;
+    }
+    public String getRoomNumber() {
+        return roomNumber;
+    }
+    public void setRoomNumber(String roomNumber) {
+        this.roomNumber = roomNumber;
     }
 }
