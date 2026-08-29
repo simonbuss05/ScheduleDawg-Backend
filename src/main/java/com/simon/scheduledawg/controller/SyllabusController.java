@@ -1,5 +1,8 @@
-package com.simon.scheduledawg.syllabus;
+package com.simon.scheduledawg.controller;
 
+import com.simon.scheduledawg.dto.GradingSchemaExtractionResult;
+import com.simon.scheduledawg.exception.SyllabusExtractionException;
+import com.simon.scheduledawg.service.SyllabusExtractionService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -39,7 +42,7 @@ public class SyllabusController {
         }
 
         try {
-            SyllabusExtractionResult result = syllabusExtractionService.extractFromPdf(pdfBytes);
+            GradingSchemaExtractionResult result = syllabusExtractionService.extractGradingSchema(pdfBytes);
             return ResponseEntity.ok(result);
         } catch (SyllabusExtractionException e) {
             return ResponseEntity.internalServerError().body(Map.of("message", e.getMessage()));

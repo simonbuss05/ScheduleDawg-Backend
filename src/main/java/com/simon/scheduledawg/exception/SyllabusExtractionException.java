@@ -1,4 +1,4 @@
-package com.simon.scheduledawg.syllabus;
+package com.simon.scheduledawg.exception;
 
 public class SyllabusExtractionException extends RuntimeException {
     public SyllabusExtractionException(String message) {

@@ -1,13 +1,18 @@
-package com.simon.scheduledawg.syllabus;
+package com.simon.scheduledawg.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.simon.scheduledawg.dto.GradingSchemaExtractionResult;
+import com.simon.scheduledawg.exception.SyllabusExtractionException;
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
-import java.util.Base64;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -17,44 +22,26 @@ public class SyllabusExtractionService {
     private static final String ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
     private static final String ANTHROPIC_VERSION = "2023-06-01";
     private static final String MODEL = "claude-sonnet-5";
+
     private static final String EXTRACTION_PROMPT = """
-            You are extracting structured schedule data from a university course syllabus PDF.
+            You are extracting the grading policy from a university course syllabus.
 
             Return ONLY valid JSON matching this exact structure — no markdown code fences, no explanation, no text before or after the JSON:
 
             {
-              "course": {
-                "name": string or null,
-                "code": string or null,
-                "professor": string or null,
-                "creditHours": number or null
-              },
-              "meetings": [
-                {
-                  "days": array of strings, using only "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY",
-                  "startTime": "HH:MM" in 24-hour format,
-                  "endTime": "HH:MM" in 24-hour format,
-                  "building": string or null,
-                  "room": string or null
-                }
+              "categories": [
+                { "name": string, "weightPercent": number }
               ],
-              "assignments": [
-                { "title": string, "dueDate": "YYYY-MM-DD" }
-              ],
-              "events": [
-                { "title": string, "date": "YYYY-MM-DD" }
-              ],
-              "finals": [
-                { "title": string, "date": "YYYY-MM-DD" or null, "startTime": "HH:MM" or null, "endTime": "HH:MM" or null, "location": string or null }
+              "scale": [
+                { "letter": string, "minPercent": number }
               ]
             }
 
             Rules:
-            - Group meetings by distinct day/time/location combinations. If lecture and lab meet at different times or locations, create separate meeting entries.
-            - Only include an assignment if you find BOTH a specific title AND a specific due date. If a due date says "TBA" or is missing, do not include that assignment at all.
-            - Only include an event (quiz, test, exam, midterm, etc.) if you find both a title and a specific date. Do not include events with no date.
-            - Finals are different from regular events — extract them separately into the "finals" array, even if some fields (date, time, location) are not stated in the syllabus. Only skip a final entirely if the syllabus never mentions one at all.
-            - If you cannot confidently determine a field, use null. Never guess or fabricate a value.
+            - "categories" should list every grading component and its weight, e.g. "Homework: 20%", "Midterm Exam: 25%". Weights should sum to approximately 100.
+            - "scale" should list every letter grade cutoff mentioned (including +/- grades like A-, B+, etc.), with the MINIMUM percent required for that letter. For a range like "90 - 92.9 = A-", use minPercent 90. For "93 and above = A", use minPercent 93.
+            - Order the scale from highest letter grade to lowest.
+            - If either the grading policy or grading scale cannot be found in this document, return an empty array for that field — do not guess or fabricate values.
             - Return valid, parseable JSON only.
             """;
 
@@ -64,32 +51,24 @@ public class SyllabusExtractionService {
     @Value("${anthropic.api.key}")
     private String apiKey;
 
-    public SyllabusExtractionService(RestClient restClient,ObjectMapper objectMapper) {
+    public SyllabusExtractionService(RestClient restClient, ObjectMapper objectMapper) {
         this.restClient = restClient;
         this.objectMapper = objectMapper;
     }
 
-    public SyllabusExtractionResult extractFromPdf(byte[] pdfBytes) {
-        String base64Pdf = Base64.getEncoder().encodeToString(pdfBytes);
+    public GradingSchemaExtractionResult extractGradingSchema(byte[] pdfBytes) {
+        String syllabusText = extractTextFromPdf(pdfBytes);
 
         Map<String, Object> requestBody = Map.of(
                 "model", MODEL,
-                "max_tokens", 2048,
+                "max_tokens", 1024,
                 "messages", List.of(
                         Map.of(
                                 "role", "user",
                                 "content", List.of(
                                         Map.of(
-                                                "type", "document",
-                                                "source", Map.of(
-                                                        "type", "base64",
-                                                        "media_type", "application/pdf",
-                                                        "data", base64Pdf
-                                                )
-                                        ),
-                                        Map.of(
                                                 "type", "text",
-                                                "text", EXTRACTION_PROMPT
+                                                "text", "Syllabus text:\n\n" + syllabusText + "\n\n" + EXTRACTION_PROMPT
                                         )
                                 )
                         )
@@ -121,9 +100,18 @@ public class SyllabusExtractionService {
         String cleaned = cleanJsonText(extractedText);
 
         try {
-            return objectMapper.readValue(cleaned, SyllabusExtractionResult.class);
+            return objectMapper.readValue(cleaned, GradingSchemaExtractionResult.class);
         } catch (Exception e) {
-            throw new SyllabusExtractionException("Could not parse extracted syllabus data.");
+            throw new SyllabusExtractionException("Could not parse extracted grading data.");
+        }
+    }
+
+    private String extractTextFromPdf(byte[] pdfBytes) {
+        try (PDDocument document = Loader.loadPDF(pdfBytes)) {
+            PDFTextStripper stripper = new PDFTextStripper();
+            return stripper.getText(document);
+        } catch (IOException e) {
+            throw new SyllabusExtractionException("Could not read the PDF file.");
         }
     }
 
