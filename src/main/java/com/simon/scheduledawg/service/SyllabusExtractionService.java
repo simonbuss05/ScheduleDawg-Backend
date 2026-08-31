@@ -21,29 +21,31 @@ public class SyllabusExtractionService {
 
     private static final String ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
     private static final String ANTHROPIC_VERSION = "2023-06-01";
-    private static final String MODEL = "claude-sonnet-5";
+    private static final String MODEL = "claude-haiku-4-5-20251001";
 
     private static final String EXTRACTION_PROMPT = """
-            You are extracting the grading policy from a university course syllabus.
+        You are extracting the grading policy from a university course syllabus.
 
-            Return ONLY valid JSON matching this exact structure — no markdown code fences, no explanation, no text before or after the JSON:
+        Return ONLY valid JSON matching this exact structure — no markdown code fences, no explanation, no text before or after the JSON:
 
-            {
-              "categories": [
-                { "name": string, "weightPercent": number }
-              ],
-              "scale": [
-                { "letter": string, "minPercent": number }
-              ]
-            }
+        {
+          "categories": [
+            { "name": string, "weightPercent": number }
+          ],
+          "scale": [
+            { "letter": string, "minPercent": number }
+          ]
+        }
 
-            Rules:
-            - "categories" should list every grading component and its weight, e.g. "Homework: 20%", "Midterm Exam: 25%". Weights should sum to approximately 100.
-            - "scale" should list every letter grade cutoff mentioned (including +/- grades like A-, B+, etc.), with the MINIMUM percent required for that letter. For a range like "90 - 92.9 = A-", use minPercent 90. For "93 and above = A", use minPercent 93.
-            - Order the scale from highest letter grade to lowest.
-            - If either the grading policy or grading scale cannot be found in this document, return an empty array for that field — do not guess or fabricate values.
-            - Return valid, parseable JSON only.
-            """;
+        Rules:
+        - "categories" should list every grading component and its weight as a PERCENT (weightPercent), e.g. "Homework: 20%", "Midterm Exam: 25%". Weights should sum to approximately 100.
+        - Some syllabi express category weights in raw POINTS instead of percentages (e.g. "Homework: 140 pts", "Final Exam: 50 pts"). If you see this, convert each category to a percent yourself: weightPercent = (category's points / total points across all categories) * 100. If the syllabus states an explicit total (e.g. "Total: 288 pts"), use that as the denominator. If no explicit total is stated, sum every category's points yourself to get the total.
+        - Do not include a category for the total/sum row itself (e.g. skip a "Total: 288 pts" line) — only include the actual individual grading components.
+        - "scale" should list every letter grade cutoff mentioned (including +/- grades like A-, B+, etc.), with the MINIMUM percent required for that letter. For a range like "90 - 92.9 = A-", use minPercent 90. For "93 and above = A", use minPercent 93.
+        - Order the scale from highest letter grade to lowest.
+        - If either the grading policy or grading scale cannot be found in this document, return an empty array for that field — do not guess or fabricate values.
+        - Return valid, parseable JSON only.
+        """;
 
     private final RestClient restClient;
     private final ObjectMapper objectMapper;

@@ -1,5 +1,6 @@
 package com.simon.scheduledawg.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 @Entity
@@ -15,6 +16,11 @@ public class UserSettings {
     private Double homeLatitude;
 
     private Double homeLongitude;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    @JsonIgnore
+    private User user;
 
     public UserSettings() {
 
@@ -49,6 +55,10 @@ public class UserSettings {
     public void setHomeLongitude(Double homeLongitude) {
         this.homeLongitude = homeLongitude;
     }
-
-
+    public User getUser() {
+        return user;
+    }
+    public void setUser(User user) {
+        this.user = user;
+    }
 }

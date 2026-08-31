@@ -1,7 +1,7 @@
 package com.simon.scheduledawg.service;
 
-import com.simon.scheduledawg.entity.Course;
 import com.simon.scheduledawg.entity.Meeting;
+import com.simon.scheduledawg.entity.User;
 import com.simon.scheduledawg.exception.ResourceNotFoundException;
 import com.simon.scheduledawg.repository.MeetingRepository;
 import org.springframework.stereotype.Service;
@@ -19,22 +19,23 @@ public class MeetingService {
         this.courseService = courseService;
     }
 
-    public Meeting createMeeting(Meeting meeting, Long courseId) {
-        Course course = courseService.getCourseById(courseId);
-        meeting.setCourse(course);
+    public Meeting createMeeting(Meeting meeting, Long courseId, User currentUser) {
+        meeting.setCourse(courseService.getCourseById(courseId, currentUser));
         return meetingRepository.save(meeting);
     }
 
-    public List<Meeting> getMeetingsByCourse(Long courseId) {
-        Course course = courseService.getCourseById(courseId);
+    public List<Meeting> getMeetingsByCourse(Long courseId, User currentUser) {
+        courseService.getCourseById(courseId, currentUser);
         return meetingRepository.findByCourseId(courseId);
     }
 
-    public Meeting getMeetingById(Long courseId, Long meetingId) {
-        return getMeetingScopedToCourse(courseId, meetingId);
+    public Meeting getMeetingById(Long courseId, Long meetingId, User currentUser) {
+        return getMeetingScopedToCourse(courseId, meetingId, currentUser);
     }
 
-    private Meeting getMeetingScopedToCourse(Long courseId, Long meetingId) {
+    private Meeting getMeetingScopedToCourse(Long courseId, Long meetingId, User currentUser) {
+        courseService.getCourseById(courseId, currentUser);
+
         Meeting meeting = meetingRepository.findById(meetingId)
                 .orElseThrow(() -> new ResourceNotFoundException("Meeting not found with id: " + meetingId));
 
@@ -45,8 +46,8 @@ public class MeetingService {
         return meeting;
     }
 
-    public Meeting fullyUpdateMeeting(Meeting meeting, Long courseId, Long meetingId) {
-        Meeting meetingToUpdate = getMeetingScopedToCourse(courseId, meetingId);
+    public Meeting fullyUpdateMeeting(Meeting meeting, Long courseId, Long meetingId, User currentUser) {
+        Meeting meetingToUpdate = getMeetingScopedToCourse(courseId, meetingId, currentUser);
         meetingToUpdate.setDayOfWeek(meeting.getDayOfWeek());
         meetingToUpdate.setStartTime(meeting.getStartTime());
         meetingToUpdate.setEndTime(meeting.getEndTime());
@@ -55,8 +56,8 @@ public class MeetingService {
         return meetingRepository.save(meetingToUpdate);
     }
 
-    public Meeting partialUpdateMeeting(Meeting meeting, Long courseId, Long meetingId) {
-        Meeting meetingToUpdate = getMeetingScopedToCourse(courseId, meetingId);
+    public Meeting partialUpdateMeeting(Meeting meeting, Long courseId, Long meetingId, User currentUser) {
+        Meeting meetingToUpdate = getMeetingScopedToCourse(courseId, meetingId, currentUser);
         if (meeting.getDayOfWeek() != null) {
             meetingToUpdate.setDayOfWeek(meeting.getDayOfWeek());
         }
@@ -75,12 +76,13 @@ public class MeetingService {
         return meetingRepository.save(meetingToUpdate);
     }
 
-    public void deleteSpecificMeeting(Long courseId, Long meetingId) {
-        Meeting meetingToDelete = getMeetingScopedToCourse(courseId, meetingId);
+    public void deleteSpecificMeeting(Long courseId, Long meetingId, User currentUser) {
+        Meeting meetingToDelete = getMeetingScopedToCourse(courseId, meetingId, currentUser);
         meetingRepository.delete(meetingToDelete);
     }
 
-    public void deleteAllMeetingsByCourse(Long courseId) {
+    public void deleteAllMeetingsByCourse(Long courseId, User currentUser) {
+        courseService.getCourseById(courseId, currentUser);
         List<Meeting> meetings = meetingRepository.findByCourseId(courseId);
         meetingRepository.deleteAll(meetings);
     }

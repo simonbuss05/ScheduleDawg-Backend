@@ -1,6 +1,7 @@
 // src/main/java/com/simon/scheduledawg/entity/Course.java
 package com.simon.scheduledawg.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;
@@ -20,6 +21,15 @@ public class Course {
     private String professor;
 
     private Integer creditHours;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    @JsonIgnore
+    private User user;
+
+    @ManyToOne
+    @JoinColumn(name = "semester_id")
+    private Semester semester;
 
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Meeting> meetings = new ArrayList<>();
@@ -79,5 +89,17 @@ public class Course {
     }
     public void setAssignments(List<Assignment> assignments) {
         this.assignments = assignments;
+    }
+    public User getUser() {
+        return user;
+    }
+    public void setUser(User user) {
+        this.user = user;
+    }
+    public Semester getSemester() {
+        return semester;
+    }
+    public void setSemester(Semester semester) {
+        this.semester = semester;
     }
 }

@@ -1,8 +1,10 @@
 package com.simon.scheduledawg.controller;
 
 import com.simon.scheduledawg.entity.GradedItem;
+import com.simon.scheduledawg.entity.User;
 import com.simon.scheduledawg.service.GradedItemService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,34 +20,34 @@ public class GradedItemController {
     }
 
     @GetMapping
-    public ResponseEntity<List<GradedItem>> getItems(@PathVariable Long categoryId) {
-        return ResponseEntity.ok(gradedItemService.getItemsByCategory(categoryId));
+    public ResponseEntity<List<GradedItem>> getItems(@PathVariable Long categoryId, @AuthenticationPrincipal User currentUser) {
+        return ResponseEntity.ok(gradedItemService.getItemsByCategory(categoryId, currentUser));
     }
 
     @GetMapping("/{itemId}")
-    public ResponseEntity<GradedItem> getItem(@PathVariable Long categoryId, @PathVariable Long itemId) {
-        return ResponseEntity.ok(gradedItemService.getItemById(categoryId, itemId));
+    public ResponseEntity<GradedItem> getItem(@PathVariable Long categoryId, @PathVariable Long itemId, @AuthenticationPrincipal User currentUser) {
+        return ResponseEntity.ok(gradedItemService.getItemById(categoryId, itemId, currentUser));
     }
 
     @PostMapping
-    public ResponseEntity<GradedItem> createItem(@PathVariable Long categoryId, @RequestBody GradedItem item) {
-        return ResponseEntity.ok(gradedItemService.createItem(item, categoryId));
+    public ResponseEntity<GradedItem> createItem(@PathVariable Long categoryId, @RequestBody GradedItem item, @AuthenticationPrincipal User currentUser) {
+        return ResponseEntity.ok(gradedItemService.createItem(item, categoryId, currentUser));
     }
 
     @PutMapping("/{itemId}")
-    public ResponseEntity<GradedItem> updateItem(@PathVariable Long categoryId, @PathVariable Long itemId, @RequestBody GradedItem item) {
-        return ResponseEntity.ok(gradedItemService.fullyUpdateItem(item, categoryId, itemId));
+    public ResponseEntity<GradedItem> updateItem(@PathVariable Long categoryId, @PathVariable Long itemId, @RequestBody GradedItem item, @AuthenticationPrincipal User currentUser) {
+        return ResponseEntity.ok(gradedItemService.fullyUpdateItem(item, categoryId, itemId, currentUser));
     }
 
     @DeleteMapping("/{itemId}")
-    public ResponseEntity<Void> deleteItem(@PathVariable Long categoryId, @PathVariable Long itemId) {
-        gradedItemService.deleteItem(categoryId, itemId);
+    public ResponseEntity<Void> deleteItem(@PathVariable Long categoryId, @PathVariable Long itemId, @AuthenticationPrincipal User currentUser) {
+        gradedItemService.deleteItem(categoryId, itemId, currentUser);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping
-    public ResponseEntity<Void> deleteAllItems(@PathVariable Long categoryId) {
-        gradedItemService.deleteAllItemsByCategory(categoryId);
+    public ResponseEntity<Void> deleteAllItems(@PathVariable Long categoryId, @AuthenticationPrincipal User currentUser) {
+        gradedItemService.deleteAllItemsByCategory(categoryId, currentUser);
         return ResponseEntity.noContent().build();
     }
 }

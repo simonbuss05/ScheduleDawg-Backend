@@ -1,5 +1,6 @@
 package com.simon.scheduledawg.service;
 
+import com.simon.scheduledawg.entity.User;
 import com.simon.scheduledawg.entity.UserSettings;
 import com.simon.scheduledawg.repository.UserSettingsRepository;
 import org.springframework.stereotype.Service;
@@ -13,15 +14,15 @@ public class UserSettingsService {
         this.userSettingsRepository = userSettingsRepository;
     }
 
-    public UserSettings getSettings() {
-        return userSettingsRepository.findAll().stream().findFirst().orElse(new UserSettings());
+    public UserSettings getSettings(User currentUser) {
+        return userSettingsRepository.findByUserId(currentUser.getId()).orElse(new UserSettings());
     }
 
-    public UserSettings updateHomeAddress(String address, Double lat, Double lng) {
-        UserSettings settings = userSettingsRepository.findAll().stream()
-                .findFirst()
+    public UserSettings updateHomeAddress(User currentUser, String address, Double lat, Double lng) {
+        UserSettings settings = userSettingsRepository.findByUserId(currentUser.getId())
                 .orElse(new UserSettings());
 
+        settings.setUser(currentUser);
         settings.setHomeAddress(address);
         settings.setHomeLatitude(lat);
         settings.setHomeLongitude(lng);

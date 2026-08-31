@@ -3,12 +3,15 @@ package com.simon.scheduledawg.controller;
 import com.simon.scheduledawg.dto.GradingSchemaExtractionResult;
 import com.simon.scheduledawg.dto.SyllabusUploadResult;
 import com.simon.scheduledawg.entity.Syllabus;
+import com.simon.scheduledawg.entity.User;
 import com.simon.scheduledawg.exception.SyllabusExtractionException;
 import com.simon.scheduledawg.service.SyllabusExtractionService;
 import com.simon.scheduledawg.service.SyllabusService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -29,18 +32,19 @@ public class SyllabusController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Syllabus>> getSyllabiByCourse(@PathVariable Long courseId) {
-        return ResponseEntity.ok(syllabusService.getSyllabiByCourse(courseId));
+    @Transactional(readOnly = true)
+    public ResponseEntity<List<Syllabus>> getSyllabiByCourse(@PathVariable Long courseId, @AuthenticationPrincipal User currentUser) {
+        return ResponseEntity.ok(syllabusService.getSyllabiByCourse(courseId, currentUser));
     }
 
     @GetMapping("/{syllabusId}")
-    public ResponseEntity<Syllabus> getSyllabus(@PathVariable Long courseId, @PathVariable Long syllabusId) {
-        return ResponseEntity.ok(syllabusService.findSyllabusById(courseId, syllabusId));
+    public ResponseEntity<Syllabus> getSyllabus(@PathVariable Long courseId, @PathVariable Long syllabusId, @AuthenticationPrincipal User currentUser) {
+        return ResponseEntity.ok(syllabusService.findSyllabusById(courseId, syllabusId, currentUser));
     }
 
     @GetMapping("/{syllabusId}/download")
-    public ResponseEntity<byte[]> downloadSyllabus(@PathVariable Long courseId, @PathVariable Long syllabusId) {
-        Syllabus syllabus = syllabusService.findSyllabusById(courseId, syllabusId);
+    public ResponseEntity<byte[]> downloadSyllabus(@PathVariable Long courseId, @PathVariable Long syllabusId, @AuthenticationPrincipal User currentUser) {
+        Syllabus syllabus = syllabusService.findSyllabusById(courseId, syllabusId, currentUser);
 
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_PDF)
@@ -49,7 +53,7 @@ public class SyllabusController {
     }
 
     @PostMapping
-    public ResponseEntity<?> uploadSyllabus(@PathVariable Long courseId, @RequestParam("file") MultipartFile file) {
+    public ResponseEntity<?> uploadSyllabus(@PathVariable Long courseId, @RequestParam("file") MultipartFile file, @AuthenticationPrincipal User currentUser) {
         if (file.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("message", "No file uploaded."));
         }
@@ -66,7 +70,7 @@ public class SyllabusController {
             return ResponseEntity.internalServerError().body(Map.of("message", "Could not read uploaded file."));
         }
 
-        Syllabus savedSyllabus = syllabusService.createSyllabus(pdfBytes, file.getOriginalFilename(), courseId);
+        Syllabus savedSyllabus = syllabusService.createSyllabus(pdfBytes, file.getOriginalFilename(), courseId, currentUser);
 
         GradingSchemaExtractionResult grading;
         try {
@@ -79,14 +83,14 @@ public class SyllabusController {
     }
 
     @DeleteMapping("/{syllabusId}")
-    public ResponseEntity<Void> deleteSyllabus(@PathVariable Long courseId, @PathVariable Long syllabusId) {
-        syllabusService.deleteSyllabus(courseId, syllabusId);
+    public ResponseEntity<Void> deleteSyllabus(@PathVariable Long courseId, @PathVariable Long syllabusId, @AuthenticationPrincipal User currentUser) {
+        syllabusService.deleteSyllabus(courseId, syllabusId, currentUser);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping
-    public ResponseEntity<Void> deleteAllSyllabi(@PathVariable Long courseId) {
-        syllabusService.deleteAllSyllabusesByCourse(courseId);
+    public ResponseEntity<Void> deleteAllSyllabi(@PathVariable Long courseId, @AuthenticationPrincipal User currentUser) {
+        syllabusService.deleteAllSyllabusesByCourse(courseId, currentUser);
         return ResponseEntity.noContent().build();
     }
 }

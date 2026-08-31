@@ -1,12 +1,13 @@
 package com.simon.scheduledawg.repository;
 
-import com.simon.scheduledawg.entity.UserSettings;
+import com.simon.scheduledawg.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
 @Repository
-public interface UserSettingsRepository extends JpaRepository<UserSettings, Long> {
-    Optional<UserSettings> findByUserId(Long userId);
+public interface UserRepository extends JpaRepository<User, Long> {
+    Optional<User> findByEmail(String email);
+    boolean existsByEmail(String email);
 }

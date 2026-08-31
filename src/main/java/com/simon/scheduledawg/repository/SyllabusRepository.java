@@ -9,5 +9,6 @@ import java.util.List;
 @Repository
 public interface SyllabusRepository extends JpaRepository<Syllabus, Long> {
     List<Syllabus> findByCourseId(Long courseId);
+    List<Syllabus> findByCourseUserId(Long userId);
 }
 

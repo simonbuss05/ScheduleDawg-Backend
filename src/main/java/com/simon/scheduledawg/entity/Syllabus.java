@@ -14,7 +14,6 @@ public class Syllabus {
 
     @ManyToOne
     @JoinColumn(name = "course_id")
-    @JsonIgnore
     private Course course;
 
     private String fileName;
@@ -22,6 +21,7 @@ public class Syllabus {
     private LocalDateTime uploadedAt;
 
     @Lob
+    @Basic(fetch = FetchType.LAZY)
     @JsonIgnore
     private byte[] fileData;
 
