@@ -37,6 +37,9 @@ public class Course {
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Assignment> assignments = new ArrayList<>();
 
+    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Event> events = new ArrayList<>();
+
     public Course() {
 
     }
@@ -89,6 +92,12 @@ public class Course {
     }
     public void setAssignments(List<Assignment> assignments) {
         this.assignments = assignments;
+    }
+    public List<Event> getEvents() {
+        return events;
+    }
+    public void setEvents(List<Event> events) {
+        this.events = events;
     }
     public User getUser() {
         return user;

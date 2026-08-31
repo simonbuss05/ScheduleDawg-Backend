@@ -5,6 +5,7 @@ import com.simon.scheduledawg.dto.SyllabusUploadResult;
 import com.simon.scheduledawg.entity.Syllabus;
 import com.simon.scheduledawg.entity.User;
 import com.simon.scheduledawg.exception.SyllabusExtractionException;
+import com.simon.scheduledawg.service.RateLimiterService;
 import com.simon.scheduledawg.service.SyllabusExtractionService;
 import com.simon.scheduledawg.service.SyllabusService;
 import org.springframework.http.HttpHeaders;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
@@ -25,10 +27,16 @@ public class SyllabusController {
 
     private final SyllabusService syllabusService;
     private final SyllabusExtractionService syllabusExtractionService;
+    private final RateLimiterService rateLimiterService;
 
-    public SyllabusController(SyllabusService syllabusService, SyllabusExtractionService syllabusExtractionService) {
+    public SyllabusController(
+            SyllabusService syllabusService,
+            SyllabusExtractionService syllabusExtractionService,
+            RateLimiterService rateLimiterService
+    ) {
         this.syllabusService = syllabusService;
         this.syllabusExtractionService = syllabusExtractionService;
+        this.rateLimiterService = rateLimiterService;
     }
 
     @GetMapping
@@ -54,6 +62,10 @@ public class SyllabusController {
 
     @PostMapping
     public ResponseEntity<?> uploadSyllabus(@PathVariable Long courseId, @RequestParam("file") MultipartFile file, @AuthenticationPrincipal User currentUser) {
+        // Each upload can trigger a paid Claude API call, so cap how often one
+        // account can hit this endpoint regardless of how many courses they have.
+        rateLimiterService.checkOrThrow("syllabus-upload:" + currentUser.getId(), 10, Duration.ofHours(1));
+
         if (file.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("message", "No file uploaded."));
         }

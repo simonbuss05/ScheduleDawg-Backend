@@ -13,6 +13,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 
@@ -22,6 +25,11 @@ public class SyllabusExtractionService {
     private static final String ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
     private static final String ANTHROPIC_VERSION = "2023-06-01";
     private static final String MODEL = "claude-haiku-4-5-20251001";
+
+    // The grading policy is almost always near the front of a syllabus; capping
+    // the text we send keeps token cost (and therefore $) bounded even for
+    // unusually long documents (multi-week schedules, appended readings, etc.).
+    private static final int MAX_SYLLABUS_TEXT_CHARS = 20_000;
 
     private static final String EXTRACTION_PROMPT = """
         You are extracting the grading policy from a university course syllabus.
@@ -49,17 +57,28 @@ public class SyllabusExtractionService {
 
     private final RestClient restClient;
     private final ObjectMapper objectMapper;
+    private final SyllabusExtractionCache extractionCache;
 
     @Value("${anthropic.api.key}")
     private String apiKey;
 
-    public SyllabusExtractionService(RestClient restClient, ObjectMapper objectMapper) {
+    public SyllabusExtractionService(RestClient restClient, ObjectMapper objectMapper, SyllabusExtractionCache extractionCache) {
         this.restClient = restClient;
         this.objectMapper = objectMapper;
+        this.extractionCache = extractionCache;
     }
 
     public GradingSchemaExtractionResult extractGradingSchema(byte[] pdfBytes) {
+        String contentHash = sha256Hex(pdfBytes);
+        GradingSchemaExtractionResult cached = extractionCache.get(contentHash);
+        if (cached != null) {
+            return cached;
+        }
+
         String syllabusText = extractTextFromPdf(pdfBytes);
+        if (syllabusText.length() > MAX_SYLLABUS_TEXT_CHARS) {
+            syllabusText = syllabusText.substring(0, MAX_SYLLABUS_TEXT_CHARS);
+        }
 
         Map<String, Object> requestBody = Map.of(
                 "model", MODEL,
@@ -101,10 +120,23 @@ public class SyllabusExtractionService {
 
         String cleaned = cleanJsonText(extractedText);
 
+        GradingSchemaExtractionResult result;
         try {
-            return objectMapper.readValue(cleaned, GradingSchemaExtractionResult.class);
+            result = objectMapper.readValue(cleaned, GradingSchemaExtractionResult.class);
         } catch (Exception e) {
             throw new SyllabusExtractionException("Could not parse extracted grading data.");
+        }
+
+        extractionCache.put(contentHash, result);
+        return result;
+    }
+
+    private String sha256Hex(byte[] data) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            return HexFormat.of().formatHex(digest.digest(data));
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 unavailable", e);
         }
     }
 

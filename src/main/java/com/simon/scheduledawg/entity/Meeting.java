@@ -5,8 +5,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Table(name = "meetings")
@@ -31,9 +29,6 @@ public class Meeting {
     private String building;
 
     private String roomNumber;
-
-    @OneToMany(mappedBy = "meeting", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Event> events = new ArrayList<>();
 
     public Meeting() {
 
@@ -77,12 +72,6 @@ public class Meeting {
     }
     public void setCourse(Course course) {
         this.course = course;
-    }
-    public List<Event> getEvents() {
-        return events;
-    }
-    public void setEvents(List<Event> events) {
-        this.events = events;
     }
     public String getBuilding() {
         return building;

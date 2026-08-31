@@ -19,9 +19,9 @@ public class Event {
     private String description;
 
     @ManyToOne
-    @JoinColumn(name = "meeting_id")
+    @JoinColumn(name = "course_id")
     @JsonIgnore
-    private Meeting meeting;
+    private Course course;
 
     private LocalDate eventDate;
 
@@ -29,10 +29,10 @@ public class Event {
 
     }
 
-    public Event(String title, String description, Meeting meeting, LocalDate eventDate) {
+    public Event(String title, String description, Course course, LocalDate eventDate) {
         this.title = title;
         this.description = description;
-        this.meeting = meeting;
+        this.course = course;
         this.eventDate = eventDate;
     }
 
@@ -60,12 +60,12 @@ public class Event {
         this.description = description;
     }
 
-    public Meeting getMeeting() {
-        return meeting;
+    public Course getCourse() {
+        return course;
     }
 
-    public void setMeeting(Meeting meeting) {
-        this.meeting = meeting;
+    public void setCourse(Course course) {
+        this.course = course;
     }
 
     public LocalDate getEventDate() {
