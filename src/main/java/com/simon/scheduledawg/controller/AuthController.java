@@ -3,8 +3,11 @@ package com.simon.scheduledawg.controller;
 import com.simon.scheduledawg.dto.AuthRequest;
 import com.simon.scheduledawg.dto.AuthResponse;
 import com.simon.scheduledawg.dto.ChangePasswordRequest;
+import com.simon.scheduledawg.dto.ForgotPasswordRequest;
+import com.simon.scheduledawg.dto.ResetPasswordRequest;
 import com.simon.scheduledawg.entity.User;
 import com.simon.scheduledawg.service.AuthService;
+import com.simon.scheduledawg.service.PasswordResetService;
 import com.simon.scheduledawg.service.RateLimiterService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
@@ -19,10 +22,12 @@ import java.time.Duration;
 public class AuthController {
 
     private final AuthService authService;
+    private final PasswordResetService passwordResetService;
     private final RateLimiterService rateLimiterService;
 
-    public AuthController(AuthService authService, RateLimiterService rateLimiterService) {
+    public AuthController(AuthService authService, PasswordResetService passwordResetService, RateLimiterService rateLimiterService) {
         this.authService = authService;
+        this.passwordResetService = passwordResetService;
         this.rateLimiterService = rateLimiterService;
     }
 
@@ -55,6 +60,25 @@ public class AuthController {
             @RequestBody ChangePasswordRequest request
     ) {
         authService.changePassword(currentUser, request);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Void> forgotPassword(@RequestBody ForgotPasswordRequest request, HttpServletRequest httpRequest) {
+        // Rate limited per IP and per email so this can't be used to spam
+        // someone's inbox, and doesn't reveal whether an email is registered
+        // through response timing/behavior differences.
+        rateLimiterService.checkOrThrow("forgot-password-ip:" + clientIp(httpRequest), 10, Duration.ofHours(1));
+        if (request.getEmail() != null && !request.getEmail().isBlank()) {
+            rateLimiterService.checkOrThrow("forgot-password-email:" + request.getEmail().trim().toLowerCase(), 3, Duration.ofHours(1));
+        }
+        passwordResetService.requestReset(request.getEmail());
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<Void> resetPassword(@RequestBody ResetPasswordRequest request) {
+        passwordResetService.resetPassword(request.getToken(), request.getNewPassword());
         return ResponseEntity.noContent().build();
     }
 
