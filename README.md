@@ -1,9 +1,9 @@
 # ScheduleDawg — Backend
 
 A Spring Boot API for a class-schedule and grade-tracking app built for UGA
-students. It's the backend half of [ScheduleDawg](https://schedule-dawg-frontend.vercel.app);
+students. It's the backend half of [ScheduleDawg](https://www.scheduledawg.com);
 the frontend lives in a separate repo at
-[scheduledawg-frontend](https://github.com/simonbuss05/scheduledawg-frontend).
+[ScheduleDawg-Frontend](https://github.com/simonbuss05/ScheduleDawg-Frontend).
 
 Deployed on [Railway](https://railway.app) (Spring Boot + Postgres). Live API:
 `https://scheduledawg-backend-production.up.railway.app`
@@ -32,10 +32,15 @@ Deployed on [Railway](https://railway.app) (Spring Boot + Postgres). Live API:
   lookups are proxied through this backend to OpenStreetMap's Overpass API
   (with a descriptive User-Agent, cached for 30 days) rather than called
   directly from the browser, since Overpass doesn't reliably send CORS
-  headers for arbitrary origins. Geocoding and walking-route directions
-  themselves are called client-side against Mapbox.
-- **Auth** — email/password with BCrypt, JWTs (30-day expiry), password
-  reset via emailed one-time tokens (Resend), and full account deletion.
+  headers for arbitrary origins. The same applies to the Nominatim fallback
+  used when Mapbox's own search comes up empty for a building. Geocoding
+  and walking-route directions themselves are called client-side against
+  Mapbox, whose public tokens are designed for that.
+- **Auth** — email/password with BCrypt, JWTs (30-day expiry) that embed a
+  token version invalidated on password change (so a leaked token doesn't
+  stay valid for its full lifetime once you've secured the account),
+  password reset via emailed one-time tokens (Resend), and full account
+  deletion.
 - **Semesters** — each account always has one active semester; "end
   semester and start new" archives the old one without deleting anything —
   past semesters and their courses stay fully browsable.
