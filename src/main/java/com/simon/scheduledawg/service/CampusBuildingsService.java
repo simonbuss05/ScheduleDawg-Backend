@@ -57,11 +57,24 @@ public class CampusBuildingsService {
                 out center;
                 """.formatted(BBOX, BBOX);
 
-        String rawResponse = restClient.post()
-                .uri(OVERPASS_URL)
-                .body("data=" + query)
-                .retrieve()
-                .body(String.class);
+        String rawResponse;
+        try {
+            rawResponse = restClient.post()
+                    .uri(OVERPASS_URL)
+                    // Overpass's own usage policy asks for a descriptive
+                    // User-Agent to distinguish real applications from abuse —
+                    // without one, requests from a plain server-side HTTP
+                    // client (no browser UA) get rejected outright, which is
+                    // exactly what was happening here.
+                    .header("User-Agent", "ScheduleDawg/1.0 (+https://github.com/simonbuss05/ScheduleDawg-Backend)")
+                    .body("data=" + query)
+                    .retrieve()
+                    .body(String.class);
+        } catch (Exception e) {
+            System.err.println("Overpass request failed: " + e.getMessage());
+            if (cached != null) return cached;
+            throw new IllegalStateException("Could not reach Overpass API: " + e.getMessage(), e);
+        }
 
         List<CampusBuilding> buildings = new ArrayList<>();
         try {
@@ -81,8 +94,9 @@ public class CampusBuildingsService {
             // that over an empty list — building autocomplete degrading to
             // "no suggestions" is better than it staying broken for everyone
             // until the next successful fetch.
+            System.err.println("Could not parse Overpass response: " + e.getMessage());
             if (cached != null) return cached;
-            throw new IllegalStateException("Could not load campus building data: " + e.getMessage(), e);
+            throw new IllegalStateException("Could not parse campus building data: " + e.getMessage(), e);
         }
 
         return buildings;
