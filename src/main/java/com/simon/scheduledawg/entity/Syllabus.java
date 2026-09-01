@@ -14,6 +14,7 @@ public class Syllabus {
 
     @ManyToOne
     @JoinColumn(name = "course_id")
+    @JsonIgnore
     private Course course;
 
     private String fileName;

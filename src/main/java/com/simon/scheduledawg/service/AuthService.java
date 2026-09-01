@@ -3,6 +3,7 @@ package com.simon.scheduledawg.service;
 import com.simon.scheduledawg.dto.AuthRequest;
 import com.simon.scheduledawg.dto.AuthResponse;
 import com.simon.scheduledawg.dto.ChangePasswordRequest;
+import com.simon.scheduledawg.dto.DeleteAccountRequest;
 import com.simon.scheduledawg.entity.User;
 import com.simon.scheduledawg.repository.UserRepository;
 import com.simon.scheduledawg.security.JwtService;
@@ -45,7 +46,7 @@ public class AuthService {
         // Every account needs an active semester to create courses into.
         semesterService.createSemester(SemesterService.defaultSemesterName(), savedUser);
 
-        String token = jwtService.generateToken(savedUser.getId(), savedUser.getEmail());
+        String token = jwtService.generateToken(savedUser.getId(), savedUser.getEmail(), savedUser.getTokenVersion());
         return new AuthResponse(token, savedUser.getId(), savedUser.getEmail());
     }
 
@@ -58,7 +59,7 @@ public class AuthService {
             throw new IllegalArgumentException("Incorrect email or password.");
         }
 
-        String token = jwtService.generateToken(user.getId(), user.getEmail());
+        String token = jwtService.generateToken(user.getId(), user.getEmail(), user.getTokenVersion());
         return new AuthResponse(token, user.getId(), user.getEmail());
     }
 
@@ -77,6 +78,25 @@ public class AuthService {
         }
 
         user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        user.setTokenVersion(user.getTokenVersion() + 1);
         userRepository.save(user);
+    }
+
+    @Transactional
+    public void deleteAccount(User currentUser, DeleteAccountRequest request) {
+        User user = userRepository.findById(currentUser.getId())
+                .orElseThrow(() -> new IllegalArgumentException("Account not found."));
+
+        if (request.getPassword() == null
+                || !passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
+            throw new IllegalArgumentException("Password is incorrect.");
+        }
+
+        // Every row owned by this account — semesters, courses and
+        // everything under them (meetings, assignments, events, grade
+        // categories/scale/items, syllabuses), settings, the plan-ahead
+        // wishlist, and password reset tokens — cascades from this single
+        // delete via ON DELETE CASCADE (see V5__cascade_deletes.sql).
+        userRepository.delete(user);
     }
 }

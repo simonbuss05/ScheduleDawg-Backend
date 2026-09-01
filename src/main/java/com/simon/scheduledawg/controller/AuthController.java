@@ -3,6 +3,7 @@ package com.simon.scheduledawg.controller;
 import com.simon.scheduledawg.dto.AuthRequest;
 import com.simon.scheduledawg.dto.AuthResponse;
 import com.simon.scheduledawg.dto.ChangePasswordRequest;
+import com.simon.scheduledawg.dto.DeleteAccountRequest;
 import com.simon.scheduledawg.dto.ForgotPasswordRequest;
 import com.simon.scheduledawg.dto.ResetPasswordRequest;
 import com.simon.scheduledawg.entity.User;
@@ -63,6 +64,15 @@ public class AuthController {
         return ResponseEntity.noContent().build();
     }
 
+    @DeleteMapping("/account")
+    public ResponseEntity<Void> deleteAccount(
+            @AuthenticationPrincipal User currentUser,
+            @RequestBody DeleteAccountRequest request
+    ) {
+        authService.deleteAccount(currentUser, request);
+        return ResponseEntity.noContent().build();
+    }
+
     @PostMapping("/forgot-password")
     public ResponseEntity<Void> forgotPassword(@RequestBody ForgotPasswordRequest request, HttpServletRequest httpRequest) {
         // Rate limited per IP and per email so this can't be used to spam
@@ -83,9 +93,17 @@ public class AuthController {
     }
 
     private String clientIp(HttpServletRequest request) {
+        // X-Forwarded-For is a comma-separated hop chain where each proxy
+        // *appends* the client IP it saw, so the last entry is the one our
+        // own reverse proxy (Railway) added — the one hop we actually trust.
+        // The first entry is whatever the original request set it to, which
+        // a client controls freely; keying rate limits off that lets an
+        // attacker send a fresh fake leading IP on every request and never
+        // hit the per-IP limit at all.
         String forwardedFor = request.getHeader("X-Forwarded-For");
         if (forwardedFor != null && !forwardedFor.isBlank()) {
-            return forwardedFor.split(",")[0].trim();
+            String[] hops = forwardedFor.split(",");
+            return hops[hops.length - 1].trim();
         }
         return request.getRemoteAddr();
     }

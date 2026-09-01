@@ -21,6 +21,14 @@ public class User {
 
     private Instant createdAt = Instant.now();
 
+    // Bumped whenever the password changes, and embedded as a claim in every
+    // JWT — a token whose claim doesn't match the current value is treated
+    // as unauthenticated (see JwtAuthenticationFilter), so changing your
+    // password invalidates every session, not just the one making the
+    // change.
+    @Column(nullable = false)
+    private Long tokenVersion = 0L;
+
     public User() {
 
     }
@@ -53,5 +61,11 @@ public class User {
     }
     public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
+    }
+    public Long getTokenVersion() {
+        return tokenVersion;
+    }
+    public void setTokenVersion(Long tokenVersion) {
+        this.tokenVersion = tokenVersion;
     }
 }

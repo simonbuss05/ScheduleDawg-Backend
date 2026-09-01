@@ -37,6 +37,7 @@ public class SyllabiController {
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_PDF)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + syllabus.getFileName() + "\"")
+                .header("X-Content-Type-Options", "nosniff")
                 .body(syllabus.getFileData());
     }
 

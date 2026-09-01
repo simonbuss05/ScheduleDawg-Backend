@@ -2,6 +2,8 @@ package com.simon.scheduledawg.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -19,8 +21,11 @@ public class Assignment {
     @JsonIgnore
     private Course course;
 
+    @NotBlank(message = "Title is required.")
+    @Size(max = 255)
     private String title;
 
+    @Size(max = 255)
     private String description;
 
     private Boolean completed;

@@ -57,6 +57,11 @@ public class SyllabusController {
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_PDF)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + syllabus.getFileName() + "\"")
+                // Without this, a browser that decides to sniff the actual
+                // bytes rather than trust the declared Content-Type could
+                // render a maliciously-mislabeled upload as HTML instead of
+                // a PDF.
+                .header("X-Content-Type-Options", "nosniff")
                 .body(syllabus.getFileData());
     }
 
@@ -82,6 +87,15 @@ public class SyllabusController {
             return ResponseEntity.internalServerError().body(Map.of("message", "Could not read uploaded file."));
         }
 
+        // The declared Content-Type above is just a client-supplied form
+        // field — nothing stops a request from labeling any file "PDF"
+        // regardless of its actual bytes. Checking the real PDF magic
+        // number means what we store and later serve back (as an "inline"
+        // PDF, with a forced Content-Type) is actually a PDF.
+        if (!isPdf(pdfBytes)) {
+            return ResponseEntity.badRequest().body(Map.of("message", "That file isn't a valid PDF."));
+        }
+
         Syllabus savedSyllabus = syllabusService.createSyllabus(pdfBytes, file.getOriginalFilename(), courseId, currentUser);
 
         GradingSchemaExtractionResult grading;
@@ -104,5 +118,14 @@ public class SyllabusController {
     public ResponseEntity<Void> deleteAllSyllabi(@PathVariable Long courseId, @AuthenticationPrincipal User currentUser) {
         syllabusService.deleteAllSyllabusesByCourse(courseId, currentUser);
         return ResponseEntity.noContent().build();
+    }
+
+    private static boolean isPdf(byte[] bytes) {
+        byte[] magic = {'%', 'P', 'D', 'F', '-'};
+        if (bytes.length < magic.length) return false;
+        for (int i = 0; i < magic.length; i++) {
+            if (bytes[i] != magic[i]) return false;
+        }
+        return true;
     }
 }

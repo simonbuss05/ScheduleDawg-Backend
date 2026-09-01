@@ -2,6 +2,9 @@ package com.simon.scheduledawg.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name = "graded_items")
@@ -16,12 +19,17 @@ public class GradedItem {
     @JsonIgnore
     private GradeCategory category;
 
+    @NotBlank(message = "Title is required.")
+    @Size(max = 255)
     private String title;
 
+    @DecimalMin(value = "0", message = "Score can't be negative.")
     private Double percentScore;
 
+    @DecimalMin(value = "0", message = "Points earned can't be negative.")
     private Double pointsEarned;
 
+    @DecimalMin(value = "0", message = "Points possible can't be negative.")
     private Double pointsPossible;
 
     public GradedItem() {

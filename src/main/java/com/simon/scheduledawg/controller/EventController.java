@@ -3,6 +3,7 @@ package com.simon.scheduledawg.controller;
 import com.simon.scheduledawg.entity.Event;
 import com.simon.scheduledawg.entity.User;
 import com.simon.scheduledawg.service.EventService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -29,12 +30,12 @@ public class EventController {
     }
 
     @PostMapping
-    public ResponseEntity<Event> createEvent(@RequestBody Event event, @PathVariable Long courseId, @AuthenticationPrincipal User currentUser) {
+    public ResponseEntity<Event> createEvent(@Valid @RequestBody Event event, @PathVariable Long courseId, @AuthenticationPrincipal User currentUser) {
         return ResponseEntity.ok(eventService.createEvent(event, courseId, currentUser));
     }
 
     @PutMapping("/{eventId}")
-    public ResponseEntity<Event> updateEvent(@PathVariable Long eventId, @RequestBody Event event, @PathVariable Long courseId, @AuthenticationPrincipal User currentUser) {
+    public ResponseEntity<Event> updateEvent(@PathVariable Long eventId, @Valid @RequestBody Event event, @PathVariable Long courseId, @AuthenticationPrincipal User currentUser) {
         return ResponseEntity.ok(eventService.fullyUpdateEvent(event, courseId, eventId, currentUser));
     }
 

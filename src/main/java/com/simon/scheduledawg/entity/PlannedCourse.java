@@ -2,6 +2,8 @@ package com.simon.scheduledawg.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 import java.time.LocalDateTime;
 
@@ -18,10 +20,15 @@ public class PlannedCourse {
     @JsonIgnore
     private User user;
 
+    @NotBlank(message = "Subject is required.")
+    @Size(max = 255)
     private String subjectCode;
 
+    @NotBlank(message = "Course number is required.")
+    @Size(max = 255)
     private String courseNumber;
 
+    @Size(max = 255)
     private String termLabel;
 
     private LocalDateTime createdAt;

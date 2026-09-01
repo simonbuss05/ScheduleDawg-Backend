@@ -11,7 +11,11 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
 
@@ -37,6 +41,15 @@ public class BulletinScraperService {
     private final ExternalCourseRepository externalCourseRepository;
     private final ExternalCourseInstructorRepository externalCourseInstructorRepository;
     private final ExternalSyllabusRepository externalSyllabusRepository;
+
+    // Self-injected proxy, used only so downloadAndStoreSyllabus can run in
+    // its own REQUIRES_NEW transaction (see getOrDownloadSyllabus) — a plain
+    // `this.downloadAndStoreSyllabus(...)` call bypasses Spring's
+    // transactional proxy entirely (the classic self-invocation pitfall), so
+    // the nested transaction would silently just join the outer one instead.
+    @Autowired
+    @Lazy
+    private BulletinScraperService self;
 
     public BulletinScraperService(
             RestClient restClient,
@@ -90,7 +103,19 @@ public class BulletinScraperService {
         }
 
         ExternalSyllabus syllabus = externalSyllabusRepository.findByExternalCourseInstructorId(instructor.getId())
-                .orElseGet(() -> downloadAndStoreSyllabus(instructor));
+                .orElseGet(() -> {
+                    try {
+                        return self.downloadAndStoreSyllabus(instructor);
+                    } catch (DataIntegrityViolationException e) {
+                        // Another concurrent request for the same
+                        // instructor's syllabus won the race and already
+                        // inserted the row that made this one violate the
+                        // unique constraint on external_course_instructor_id
+                        // — that row is exactly what we wanted anyway.
+                        return externalSyllabusRepository.findByExternalCourseInstructorId(instructor.getId())
+                                .orElseThrow(() -> e);
+                    }
+                });
 
         // Postgres large objects (the `oid`-backed, lazily-fetched fileData)
         // can only be streamed while this transaction's connection is open —
@@ -188,7 +213,12 @@ public class BulletinScraperService {
         externalCourseRepository.save(externalCourse);
     }
 
-    private ExternalSyllabus downloadAndStoreSyllabus(ExternalCourseInstructor instructor) {
+    // REQUIRES_NEW so a unique-constraint violation here (see caller) only
+    // poisons this inner transaction — Postgres aborts the entire
+    // transaction on a failed statement, so without this the outer
+    // transaction's connection would be unusable for the fallback re-query.
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public ExternalSyllabus downloadAndStoreSyllabus(ExternalCourseInstructor instructor) {
         byte[] pdfBytes = restClient.get()
                 .uri(BASE_URL + "/Course/DownloadSyllabusFile?ID=" + instructor.getExternalCourse().getBulletinCourseId()
                         + "&IDSyllabus=" + instructor.getSyllabusFileId())

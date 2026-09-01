@@ -24,12 +24,13 @@ public class JwtService {
         this.expirationMs = expirationMs;
     }
 
-    public String generateToken(Long userId, String email) {
+    public String generateToken(Long userId, String email, Long tokenVersion) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + expirationMs);
         return Jwts.builder()
                 .subject(String.valueOf(userId))
                 .claim("email", email)
+                .claim("tv", tokenVersion)
                 .issuedAt(now)
                 .expiration(expiry)
                 .signWith(key)
@@ -37,11 +38,22 @@ public class JwtService {
     }
 
     public Long extractUserId(String token) {
-        Claims claims = Jwts.parser()
+        return Long.valueOf(parseClaims(token).getSubject());
+    }
+
+    // A token minted before the account's tokenVersion last changed (i.e.
+    // before its most recent password change) carries an older/missing
+    // value here and should no longer authenticate.
+    public Long extractTokenVersion(String token) {
+        Object tv = parseClaims(token).get("tv");
+        return tv == null ? 0L : Long.valueOf(tv.toString());
+    }
+
+    private Claims parseClaims(String token) {
+        return Jwts.parser()
                 .verifyWith(key)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
-        return Long.valueOf(claims.getSubject());
     }
 }

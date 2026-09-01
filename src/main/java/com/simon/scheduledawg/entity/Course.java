@@ -3,6 +3,10 @@ package com.simon.scheduledawg.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,12 +18,18 @@ public class Course {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "Course name is required.")
+    @Size(max = 255)
     private String name;
 
+    @Size(max = 255)
     private String code;
 
+    @Size(max = 255)
     private String professor;
 
+    @Min(value = 0, message = "Credit hours can't be negative.")
+    @Max(value = 12, message = "Credit hours can't be more than 12.")
     private Integer creditHours;
 
     @ManyToOne

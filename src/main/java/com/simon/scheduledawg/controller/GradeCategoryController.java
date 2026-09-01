@@ -3,6 +3,7 @@ package com.simon.scheduledawg.controller;
 import com.simon.scheduledawg.entity.GradeCategory;
 import com.simon.scheduledawg.entity.User;
 import com.simon.scheduledawg.service.GradeCategoryService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -30,12 +31,12 @@ public class GradeCategoryController {
     }
 
     @PostMapping
-    public ResponseEntity<GradeCategory> createCategory(@RequestBody GradeCategory gradeCategory, @PathVariable Long courseId, @AuthenticationPrincipal User currentUser) {
+    public ResponseEntity<GradeCategory> createCategory(@Valid @RequestBody GradeCategory gradeCategory, @PathVariable Long courseId, @AuthenticationPrincipal User currentUser) {
         return ResponseEntity.ok(gradeCategoryService.createCategory(gradeCategory, courseId, currentUser));
     }
 
     @PutMapping("/{gradeCategoryId}")
-    public ResponseEntity<GradeCategory> fullyUpdateCategory(@PathVariable Long gradeCategoryId, @RequestBody GradeCategory gradeCategory, @PathVariable Long courseId, @AuthenticationPrincipal User currentUser) {
+    public ResponseEntity<GradeCategory> fullyUpdateCategory(@PathVariable Long gradeCategoryId, @Valid @RequestBody GradeCategory gradeCategory, @PathVariable Long courseId, @AuthenticationPrincipal User currentUser) {
         return ResponseEntity.ok(gradeCategoryService.fullyUpdateCategory(gradeCategory, courseId, gradeCategoryId, currentUser));
     }
 

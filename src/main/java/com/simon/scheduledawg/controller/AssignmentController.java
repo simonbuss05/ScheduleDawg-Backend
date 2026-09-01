@@ -3,6 +3,7 @@ package com.simon.scheduledawg.controller;
 import com.simon.scheduledawg.entity.Assignment;
 import com.simon.scheduledawg.entity.User;
 import com.simon.scheduledawg.service.AssignmentService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -30,12 +31,12 @@ public class AssignmentController {
     }
 
     @PostMapping
-    public ResponseEntity<Assignment> createAssignment(@PathVariable Long courseId, @RequestBody Assignment assignment, @AuthenticationPrincipal User currentUser) {
+    public ResponseEntity<Assignment> createAssignment(@PathVariable Long courseId, @Valid @RequestBody Assignment assignment, @AuthenticationPrincipal User currentUser) {
         return ResponseEntity.ok(assignmentService.createAssignment(assignment, courseId, currentUser));
     }
 
     @PutMapping("/{assignmentId}")
-    public ResponseEntity<Assignment> fullyUpdateAssignment(@PathVariable Long courseId, @PathVariable Long assignmentId, @RequestBody Assignment assignment, @AuthenticationPrincipal User currentUser) {
+    public ResponseEntity<Assignment> fullyUpdateAssignment(@PathVariable Long courseId, @PathVariable Long assignmentId, @Valid @RequestBody Assignment assignment, @AuthenticationPrincipal User currentUser) {
         return ResponseEntity.ok(assignmentService.fullyUpdateAssignment(assignment, courseId, assignmentId, currentUser));
     }
 

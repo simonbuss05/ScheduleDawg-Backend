@@ -3,6 +3,7 @@ package com.simon.scheduledawg.controller;
 import com.simon.scheduledawg.entity.GradedItem;
 import com.simon.scheduledawg.entity.User;
 import com.simon.scheduledawg.service.GradedItemService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -30,12 +31,12 @@ public class GradedItemController {
     }
 
     @PostMapping
-    public ResponseEntity<GradedItem> createItem(@PathVariable Long categoryId, @RequestBody GradedItem item, @AuthenticationPrincipal User currentUser) {
+    public ResponseEntity<GradedItem> createItem(@PathVariable Long categoryId, @Valid @RequestBody GradedItem item, @AuthenticationPrincipal User currentUser) {
         return ResponseEntity.ok(gradedItemService.createItem(item, categoryId, currentUser));
     }
 
     @PutMapping("/{itemId}")
-    public ResponseEntity<GradedItem> updateItem(@PathVariable Long categoryId, @PathVariable Long itemId, @RequestBody GradedItem item, @AuthenticationPrincipal User currentUser) {
+    public ResponseEntity<GradedItem> updateItem(@PathVariable Long categoryId, @PathVariable Long itemId, @Valid @RequestBody GradedItem item, @AuthenticationPrincipal User currentUser) {
         return ResponseEntity.ok(gradedItemService.fullyUpdateItem(item, categoryId, itemId, currentUser));
     }
 

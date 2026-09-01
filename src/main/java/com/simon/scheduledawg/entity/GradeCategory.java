@@ -2,6 +2,10 @@ package com.simon.scheduledawg.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name = "grade_categories")
@@ -15,8 +19,12 @@ public class GradeCategory {
     @JsonIgnore
     private Course course;
 
+    @NotBlank(message = "Category name is required.")
+    @Size(max = 255)
     private String name;
 
+    @DecimalMin(value = "0", message = "Weight can't be negative.")
+    @DecimalMax(value = "100", message = "Weight can't be more than 100%.")
     private Double weightPercent;
 
     private Double placeholderScore;

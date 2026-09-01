@@ -3,6 +3,7 @@ package com.simon.scheduledawg.controller;
 import com.simon.scheduledawg.entity.GradeScaleEntry;
 import com.simon.scheduledawg.entity.User;
 import com.simon.scheduledawg.service.GradeScaleEntryService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -30,12 +31,12 @@ public class GradeScaleEntryController {
     }
 
     @PostMapping
-    public ResponseEntity<GradeScaleEntry> createScale(@RequestBody GradeScaleEntry gradeScaleEntry, @PathVariable Long courseId, @AuthenticationPrincipal User currentUser) {
+    public ResponseEntity<GradeScaleEntry> createScale(@Valid @RequestBody GradeScaleEntry gradeScaleEntry, @PathVariable Long courseId, @AuthenticationPrincipal User currentUser) {
         return ResponseEntity.ok(gradeScaleEntryService.createGradeScaleEntry(gradeScaleEntry, courseId, currentUser));
     }
 
     @PutMapping("/{scaleId}")
-    public ResponseEntity<GradeScaleEntry> fullyUpdateScale(@PathVariable Long courseId, @PathVariable Long scaleId, @RequestBody GradeScaleEntry gradeScaleEntry, @AuthenticationPrincipal User currentUser) {
+    public ResponseEntity<GradeScaleEntry> fullyUpdateScale(@PathVariable Long courseId, @PathVariable Long scaleId, @Valid @RequestBody GradeScaleEntry gradeScaleEntry, @AuthenticationPrincipal User currentUser) {
         return ResponseEntity.ok(gradeScaleEntryService.fullyUpdateGradeScaleEntry(courseId, scaleId, gradeScaleEntry, currentUser));
     }
 

@@ -3,6 +3,7 @@ package com.simon.scheduledawg.controller;
 import com.simon.scheduledawg.entity.Meeting;
 import com.simon.scheduledawg.entity.User;
 import com.simon.scheduledawg.service.MeetingService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -30,12 +31,12 @@ public class MeetingController {
     }
 
     @PostMapping
-    public ResponseEntity<Meeting> createMeeting(@PathVariable Long courseId, @RequestBody Meeting meeting, @AuthenticationPrincipal User currentUser) {
+    public ResponseEntity<Meeting> createMeeting(@PathVariable Long courseId, @Valid @RequestBody Meeting meeting, @AuthenticationPrincipal User currentUser) {
         return ResponseEntity.ok(meetingService.createMeeting(meeting, courseId, currentUser));
     }
 
     @PutMapping("/{meetingId}")
-    public ResponseEntity<Meeting> fullyUpdateMeeting(@PathVariable Long courseId, @PathVariable Long meetingId, @RequestBody Meeting meeting, @AuthenticationPrincipal User currentUser) {
+    public ResponseEntity<Meeting> fullyUpdateMeeting(@PathVariable Long courseId, @PathVariable Long meetingId, @Valid @RequestBody Meeting meeting, @AuthenticationPrincipal User currentUser) {
         return ResponseEntity.ok(meetingService.fullyUpdateMeeting(meeting, courseId, meetingId, currentUser));
     }
 

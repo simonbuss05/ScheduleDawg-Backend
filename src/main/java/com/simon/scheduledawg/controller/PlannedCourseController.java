@@ -8,6 +8,7 @@ import com.simon.scheduledawg.entity.User;
 import com.simon.scheduledawg.service.BulletinScraperService;
 import com.simon.scheduledawg.service.PlannedCourseService;
 import com.simon.scheduledawg.service.RateLimiterService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -44,7 +45,7 @@ public class PlannedCourseController {
     }
 
     @PostMapping
-    public ResponseEntity<PlannedCourse> create(@RequestBody PlannedCourse plannedCourse, @AuthenticationPrincipal User currentUser) {
+    public ResponseEntity<PlannedCourse> create(@Valid @RequestBody PlannedCourse plannedCourse, @AuthenticationPrincipal User currentUser) {
         return ResponseEntity.status(HttpStatus.CREATED).body(plannedCourseService.createPlannedCourse(plannedCourse, currentUser));
     }
 

@@ -3,6 +3,7 @@ package com.simon.scheduledawg.controller;
 import com.simon.scheduledawg.entity.Course;
 import com.simon.scheduledawg.entity.User;
 import com.simon.scheduledawg.service.CourseService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -34,13 +35,13 @@ public class CourseController {
     }
 
     @PostMapping
-    public ResponseEntity<Course> createCourse(@RequestBody Course course, @AuthenticationPrincipal User currentUser){
+    public ResponseEntity<Course> createCourse(@Valid @RequestBody Course course, @AuthenticationPrincipal User currentUser){
         Course saved = courseService.createCourse(course, currentUser);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Course> updateCourse(@PathVariable Long id, @RequestBody Course course, @AuthenticationPrincipal User currentUser){
+    public ResponseEntity<Course> updateCourse(@PathVariable Long id, @Valid @RequestBody Course course, @AuthenticationPrincipal User currentUser){
         Course updated = courseService.updateFullCourse(id, course, currentUser);
         return ResponseEntity.ok(updated);
     }
