@@ -24,7 +24,7 @@ public class SyllabusService {
 
     public List<Syllabus> getSyllabiByCourse(Long courseId, User currentUser) {
         courseService.getCourseById(courseId, currentUser); // verify ownership
-        return syllabusRepository.findByCourseId(courseId);
+        return syllabusRepository.findByCourse_Id(courseId);
     }
 
     public Syllabus createSyllabus(byte[] fileData, String fileName, Long courseId, User currentUser) {
@@ -39,7 +39,7 @@ public class SyllabusService {
 
     @Transactional(readOnly = true)
     public List<Syllabus> getAllSyllabuses(User currentUser) {
-        return syllabusRepository.findByCourseUserId(currentUser.getId());
+        return syllabusRepository.findByCourse_User_Id(currentUser.getId());
     }
 
     public Syllabus findSyllabusById(Long courseId, Long syllabusId, User currentUser) {
@@ -66,7 +66,7 @@ public class SyllabusService {
 
     public void deleteAllSyllabusesByCourse(Long courseId, User currentUser) {
         courseService.getCourseById(courseId, currentUser);
-        List<Syllabus> syllabuses = syllabusRepository.findByCourseId(courseId);
+        List<Syllabus> syllabuses = syllabusRepository.findByCourse_Id(courseId);
         syllabusRepository.deleteAll(syllabuses);
     }
 

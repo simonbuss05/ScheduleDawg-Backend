@@ -1,6 +1,7 @@
 package com.simon.scheduledawg.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -67,4 +68,20 @@ public class Syllabus {
         this.fileData = fileDate;
     }
 
+    // course itself is @JsonIgnore'd (serializing it dragged in its meetings/
+    // assignments/events/semester too), but the frontend still needs to know
+    // which course a syllabus belongs to — expose just the identifying
+    // fields instead of the whole nested entity.
+    @JsonProperty("courseId")
+    public Long getCourseId() {
+        return course != null ? course.getId() : null;
+    }
+    @JsonProperty("courseName")
+    public String getCourseName() {
+        return course != null ? course.getName() : null;
+    }
+    @JsonProperty("courseCode")
+    public String getCourseCode() {
+        return course != null ? course.getCode() : null;
+    }
 }
